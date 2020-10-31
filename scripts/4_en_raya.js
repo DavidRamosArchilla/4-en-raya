@@ -328,45 +328,5 @@ function sleep(ms) {
 
 function playGame(){
     imprimir_tablero()
-    setListenersCasillas()
-    
-    var PROFUNDIDAD = 8
-    var ALPHA = -1000000000
-    var BETA = 1000000000
-    var posJugador;
-
-    /*while (true){
-        document.getElementsByName("turno")[0].innerHTML ="jugadpr actual" + jugador_actual;
-        if (jugador_actual == 'X'){
-            //posJugador = parseInt(prompt("columna?"))
-            checkHaMetidoFicha();
-            
-//            console.log(posJugador)
-            
-            //var columna = parseInt(posJugador);
-            //meter_ficha(columna)
-            dibujarTablero();
-            //console.log(get_abiertos());
-            var posible_ganador = hay_ganador()
-            if( posible_ganador != '-'){
-                console.log("Ganan " + jugador_actual)
-                break
-            }
-        }
-        else if (jugador_actual == 'O'){
-            //alert("jugando ia");
-            //var tupla = minimax_alpha_beta(PROFUNDIDAD, ALPHA, BETA, 'O')
-           /* print("heuristico: ", tupla[0], "columna: ", tupla[1])
-            meter_ficha( minimax_alpha_beta(PROFUNDIDAD, ALPHA, BETA, 'O').pos);
-            jugador_actual = cambiar_jugador()
-            dibujarTablero();
-        var posible_ganador = hay_ganador()
-            if( posible_ganador != '-'){
-                console.log("Ganan " + jugador_actual)
-                break
-            }
-        }
-    
-    }
-    return 0*/
+    setListenersCasillas()  
 }
