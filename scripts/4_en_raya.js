@@ -266,9 +266,7 @@ function setListenersCasillas(){
         filasHtml.push(document.getElementsByClassName("fila"+i))
     }
 
-    var PROFUNDIDAD = 8
-    var ALPHA = -1000000000
-    var BETA = 1000000000
+    
     var divJugador = document.getElementsByName("turno")[0]
     for (var i=0; i< ALTURA_MAXIMA ; i++){
         for(var j=0; j < 7 ;j++){
@@ -277,24 +275,37 @@ function setListenersCasillas(){
                 if(jugador_actual=='X'){ 
                     meter_ficha(jota);
                     dibujarTablero();
+                    
                     divJugador.innerHTML ="jugadpr actual" + jugador_actual;
 
                     jugador_actual = cambiar_jugador();
                     
-                    meter_ficha( minimax_alpha_beta(PROFUNDIDAD, ALPHA, BETA, 'O').pos);
-                    jugador_actual = cambiar_jugador()
-                    dibujarTablero();
                     var posible_ganador = hay_ganador()
                     if( posible_ganador != '-'){
                         divJugador.innerHTML = ("Ganan " + jugador_actual)
                     }
-                    else divJugador.innerHTML ="jugadpr actual" + jugador_actual;
+                    else divJugador.innerHTML ="jugador actual " + jugador_actual;
+                    juegaIa()
                 }
             });   
         }
     }
 }
 
+async function juegaIa(){
+    var PROFUNDIDAD = 7
+    var ALPHA = -1000000000
+    var BETA = 1000000000
+    var divJugador = document.getElementsByName("turno")[0]
+    meter_ficha( minimax_alpha_beta(PROFUNDIDAD, ALPHA, BETA, 'O').pos);
+    jugador_actual = cambiar_jugador()
+    dibujarTablero();
+    var posible_ganador = hay_ganador()
+    if( posible_ganador != '-'){
+        divJugador.innerHTML = ("Ganan " + jugador_actual)
+    }
+    else divJugador.innerHTML ="jugador actual " + jugador_actual;
+}
 function dibujarTablero(){
     var filas = get_filas();
     var filasHtml =[];
