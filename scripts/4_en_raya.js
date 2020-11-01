@@ -259,7 +259,7 @@ function evaluar_4_elementos(linea){
     return 0
 }
 
-function setListenersCasillas(){
+function setListenersCasillasIa(){
     var filasHtml =[];
     for (var i =0; i<6 ; i++){
         var fila;
@@ -267,24 +267,12 @@ function setListenersCasillas(){
     }
 
     
-    var divJugador = document.getElementsByName("turno")[0]
     for (var i=0; i< ALTURA_MAXIMA ; i++){
         for(var j=0; j < 7 ;j++){
             const jota = j
             filasHtml[i][j].addEventListener("click",function(){ 
                 if(jugador_actual=='X'){ 
-                    meter_ficha(jota);
-                    dibujarTablero();
-                    
-                    divJugador.innerHTML ="jugadpr actual" + jugador_actual;
-
-                    jugador_actual = cambiar_jugador();
-                    
-                    var posible_ganador = hay_ganador()
-                    if( posible_ganador != '-'){
-                        divJugador.innerHTML = ("Ganan " + jugador_actual)
-                    }
-                    else divJugador.innerHTML ="jugador actual " + jugador_actual;
+                    listenerJugador(jota);
                     juegaIa()
                 }
             });   
@@ -292,7 +280,23 @@ function setListenersCasillas(){
     }
 }
 
-async function juegaIa(){
+function listenerJugador(pos){
+    var divJugador = document.getElementsByName("turno")[0]
+    meter_ficha(pos);
+    dibujarTablero();
+    
+    divJugador.innerHTML ="jugadpr actual" + jugador_actual;
+
+    jugador_actual = cambiar_jugador();
+    
+    var posible_ganador = hay_ganador()
+    if( posible_ganador != '-'){
+        divJugador.innerHTML = ("Ganan " + jugador_actual)
+    }
+    else divJugador.innerHTML ="jugador actual " + jugador_actual;
+}
+
+function juegaIa(){
     var PROFUNDIDAD = 7
     var ALPHA = -1000000000
     var BETA = 1000000000
@@ -306,6 +310,26 @@ async function juegaIa(){
     }
     else divJugador.innerHTML ="jugador actual " + jugador_actual;
 }
+
+
+function setListenersCasillasJcj(){
+    var filasHtml =[];
+    for (var i =0; i<6 ; i++){
+        var fila;
+        filasHtml.push(document.getElementsByClassName("fila"+i))
+    }
+
+    
+    for (var i=0; i< ALTURA_MAXIMA ; i++){
+        for(var j=0; j < 7 ;j++){
+            const constJ = j
+            filasHtml[i][j].addEventListener("click",function(){ 
+                listenerJugador(constJ)
+            });
+        }
+    }
+}
+
 function dibujarTablero(){
     var filas = get_filas();
     var filasHtml =[];
@@ -337,7 +361,11 @@ function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
   }*/
 
-function playGame(){
+function playGameIa(){
     imprimir_tablero()
-    setListenersCasillas()  
+    setListenersCasillasIa()  
+}
+
+function playGameJcj(){
+    setListenersCasillasJcj()
 }
