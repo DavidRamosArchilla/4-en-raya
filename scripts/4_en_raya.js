@@ -260,28 +260,38 @@ function evaluar_4_elementos(linea){
 }
 
 
-var isSetIa;
+var inGame;
 
 function setListenersCasillasIa(){
+    function clickListenerJcj(pos){
+        if(jugador_actual=='X' ){ 
+            listenerJugador(pos);
+            juegaIa()
+        }
+    }
+    
     var filasHtml =[];
     for (var i =0; i<6 ; i++){
-        var fila;
         filasHtml.push(document.getElementsByClassName("fila"+i))
     }
-
-    
     for (var i=0; i< ALTURA_MAXIMA ; i++){
         for(var j=0; j < 7 ;j++){
             const jota = j
-            filasHtml[i][j].addEventListener("click",function(){ 
-                    isSetIa = true
-                    if(jugador_actual=='X' ){ 
-                        listenerJugador(jota);
-                        juegaIa()
-                }   
-            });   
+            handlerJcIa = function(){
+                clickListenerJcj(jota);
+            }
+            filasHtml[i][j].addEventListener("click",handlerJcIa);   
         }
     }
+}
+
+
+
+function getcolorJugador(jugador){
+    if(jugador == 'X')
+        return "Amarillo"
+    else
+        return "Rojo"
 }
 
 function listenerJugador(pos){
@@ -289,16 +299,20 @@ function listenerJugador(pos){
     meter_ficha(pos);
     dibujarTablero();
     
-    divJugador.innerHTML ="jugadpr actual" + jugador_actual;
-
-    jugador_actual = cambiar_jugador();
+    divJugador.innerHTML ="jugador actual" + getcolorJugador( jugador_actual);
     
     var posible_ganador = hay_ganador()
     if( posible_ganador != '-'){
-        divJugador.innerHTML = ("Ganan " + jugador_actual)
+        divJugador.innerHTML = ("Ganan " + getcolorJugador( jugador_actual))
+        resetListeners();
+        esconderMostrarBotones(true);
+        inGame = false;
     }
-    else divJugador.innerHTML ="jugador actual " + jugador_actual;
+    else divJugador.innerHTML ="jugador actual " + getcolorJugador(cambiar_jugador())
+
+    jugador_actual = cambiar_jugador();
 }
+
 
 function juegaIa(){
     var PROFUNDIDAD = 7
@@ -306,17 +320,25 @@ function juegaIa(){
     var BETA = 1000000000
     var divJugador = document.getElementsByName("turno")[0]
     meter_ficha( minimax_alpha_beta(PROFUNDIDAD, ALPHA, BETA, 'O').pos);
-    jugador_actual = cambiar_jugador()
     dibujarTablero();
     var posible_ganador = hay_ganador()
     if( posible_ganador != '-'){
-        divJugador.innerHTML = ("Ganan " + jugador_actual)
+        divJugador.innerHTML = ("Ganan " + getcolorJugador( jugador_actual))
+        resetListeners();
+        esconderMostrarBotones(true);
+        inGame = false;
     }
-    else divJugador.innerHTML ="jugador actual " + jugador_actual;
+    else divJugador.innerHTML ="jugador actual " + getcolorJugador( cambiar_jugador());
+
+    jugador_actual = cambiar_jugador()
 }
 
 
 function setListenersCasillasJcj(){
+    function clickListenerJcj(pos){
+        listenerJugador(pos)
+    }
+
     var filasHtml =[];
     for (var i =0; i<6 ; i++){
         filasHtml.push(document.getElementsByClassName("fila"+i))
@@ -325,13 +347,16 @@ function setListenersCasillasJcj(){
     for (var i=0; i< ALTURA_MAXIMA ; i++){
         for(var j=0; j < 7 ;j++){
             const constJ = j
-            filasHtml[i][j].addEventListener("click",function(){ 
-                listenerJugador(constJ)
-                isSetIa = false;
-            });
+            handlerJcJ = function(){
+                clickListenerJcj(constJ)
+            }
+            filasHtml[i][j].addEventListener("click",handlerJcJ);
         }
     }
 }
+
+
+
 
 function dibujarTablero(){
     var filas = get_filas();
@@ -354,18 +379,58 @@ function dibujarTablero(){
     }
 }
 
+function vaciarTablero(){
+    tablero = [[], [], [], [], [], [], []];
+    for (var i =0; i<6 ; i++){
+        var fila = []
+        fila = document.getElementsByClassName("fila"+i);
+        for(j=0;j<fila.length;j++){
+            fila[j].innerHTML = '<img class="img-fluid" alt="Responsive image" src="./images/ciruclo-blanco.png">'; 
+        }
+    }
+}
+
+
+function esconderMostrarBotones(mostrar){
+    if(mostrar){
+        document.getElementsByName("botonIniciar")[0].style.visibility = "visible"
+        document.getElementsByName("botonIniciar")[1].style.visibility = "visible"
+    }
+    else{
+        document.getElementsByName("botonIniciar")[0].style.visibility = "hidden"
+        document.getElementsByName("botonIniciar")[1].style.visibility = "hidden"
+    }
+}
+
+function resetListeners(){
+    for (var i =0; i<6 ; i++){
+        var fila = []
+        fila = document.getElementsByClassName("fila"+i);
+        for(j=0;j<fila.length;j++){
+            var el =fila[j];
+            elClone = el.cloneNode(true);
+            el.parentNode.replaceChild(elClone, el);
+        }
+    }
+}
+
 
 function playGameIa(){
-    imprimir_tablero()
-    if( isSetIa == null){
+    vaciarTablero();
+    esconderMostrarBotones(false);
+    
+    if( !inGame ){
         setListenersCasillasIa()  
-        isSetIa = true
+        inGame = true
     }
 }
 
 function playGameJcj(){
-    if( isSetIa == null){
+    vaciarTablero();
+    esconderMostrarBotones(false);
+    
+    if( !inGame ){
         setListenersCasillasJcj()
-        isSetIa = false  
+        inGame = true  
     }
 }
