@@ -319,11 +319,9 @@ function juegaIa(){
 function setListenersCasillasJcj(){
     var filasHtml =[];
     for (var i =0; i<6 ; i++){
-        var fila;
         filasHtml.push(document.getElementsByClassName("fila"+i))
     }
 
-    
     for (var i=0; i< ALTURA_MAXIMA ; i++){
         for(var j=0; j < 7 ;j++){
             const constJ = j
@@ -356,28 +354,17 @@ function dibujarTablero(){
     }
 }
 
-/*async function checkHaMetidoFicha() {
-    if(jugador_actual == 'X') {
-        await sleep(1000);
-        checkHaMetidoFicha(); /* this checks the flag every 100 milliseconds
-    }
-}
-function sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-  }*/
-
 
 function playGameIa(){
-    
     imprimir_tablero()
-    if( !isSetIa || isSetIa == null){
+    if( isSetIa == null){
         setListenersCasillasIa()  
         isSetIa = true
     }
 }
 
 function playGameJcj(){
-    if( isSetIa || isSetIa == null){
+    if( isSetIa == null){
         setListenersCasillasJcj()
         isSetIa = false  
     }
