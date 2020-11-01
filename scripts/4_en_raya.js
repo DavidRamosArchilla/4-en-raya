@@ -212,7 +212,7 @@ function heuristico(){
         columnas.push(col);
     }
 
-    var lineas = diagonales.concat(filas).concat(columnas)
+    var lineas = (diagonales.concat(filas)).concat(columnas)
     for (var i = 0 ; i< lineas.length;i++){
         var linea = lineas[i];
         valor += heuristico_linea(linea)
@@ -259,6 +259,9 @@ function evaluar_4_elementos(linea){
     return 0
 }
 
+
+var isSetIa;
+
 function setListenersCasillasIa(){
     var filasHtml =[];
     for (var i =0; i<6 ; i++){
@@ -271,10 +274,11 @@ function setListenersCasillasIa(){
         for(var j=0; j < 7 ;j++){
             const jota = j
             filasHtml[i][j].addEventListener("click",function(){ 
-                if(jugador_actual=='X'){ 
-                    listenerJugador(jota);
-                    juegaIa()
-                }
+                    isSetIa = true
+                    if(jugador_actual=='X' ){ 
+                        listenerJugador(jota);
+                        juegaIa()
+                }   
             });   
         }
     }
@@ -325,6 +329,7 @@ function setListenersCasillasJcj(){
             const constJ = j
             filasHtml[i][j].addEventListener("click",function(){ 
                 listenerJugador(constJ)
+                isSetIa = false;
             });
         }
     }
@@ -361,11 +366,19 @@ function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
   }*/
 
+
 function playGameIa(){
+    
     imprimir_tablero()
-    setListenersCasillasIa()  
+    if( !isSetIa || isSetIa == null){
+        setListenersCasillasIa()  
+        isSetIa = true
+    }
 }
 
 function playGameJcj(){
-    setListenersCasillasJcj()
+    if( isSetIa || isSetIa == null){
+        setListenersCasillasJcj()
+        isSetIa = false  
+    }
 }
