@@ -155,11 +155,11 @@ function imprimir_tablero(){
 
 
 function minimax_alpha_beta(profundidad, alpha, beta, jugador){
-    /*# ganador = hay_ganador()
-    # if ganador == 'X':
-    #     return -1000000, None
-    # if ganador == 'O':
-    #     return 1000000, None*/
+    ganador = hay_ganador()
+    if (ganador == 'X')
+         return {heu : -1000000, pos :-1}
+    if (ganador == 'O')
+         return  {heu : 1000000, pos :-1}
     if( profundidad == 0)
         return {heu : heuristico(), pos :-1}
     if (jugador == 'O'){
@@ -167,12 +167,19 @@ function minimax_alpha_beta(profundidad, alpha, beta, jugador){
         var abiertos = get_abiertos()
         var posicion_mejor = 0
         var mejor_valor = -100000000
+        var heuristicos = [];
         for (var i = 0 ; i<abiertos.length;i++){
+            
             var pos=abiertos[i];
             tablero[pos].push(jugador) // # "generar" estado hijo
-            valor = Math.max(valor, minimax_alpha_beta(profundidad - 1, alpha, beta, 'X').heu)
+            var posibleMejor =minimax_alpha_beta(profundidad - 1, alpha, beta, 'X').heu
+            valor = Math.max(valor, posibleMejor)
             tablero[pos].pop() // # volver al estado actual
             alpha = Math.max(alpha, valor)
+            if (profundidad == 8){
+                heuristicos.push(posibleMejor)
+                if(i==abiertos.length-1) {console.log(heuristicos); console.log(abiertos)}
+            }
             if (alpha >= beta)
                 break  //# poda
             if (valor > mejor_valor){  //# guardar la columna de la mejor jugada
@@ -233,8 +240,7 @@ function heuristico_linea(linea){
     return puntuacion
 }
 
-
-function evaluar_4_elementos(linea){
+    function evaluar_4_elementos(linea){
     //# linea va a tener 4 elementos
     var cant_o = 0
     var cant_x = 0
@@ -252,21 +258,26 @@ function evaluar_4_elementos(linea){
             return cant_o
     else if (cant_o == 0)
         if (cant_x==4)
-            return -1000000
+            return -100000
          else 
             return -1 * cant_x
-    
-    return 0
+    else
+        return 0
 }
 
 
 var inGame;
 
 function setListenersCasillasIa(){
+    var haJugadoIa=false
     function clickListenerJcj(pos){
         if(jugador_actual=='X' ){ 
             listenerJugador(pos);
+            haJugadoIa=false
+        }
+        else{
             juegaIa()
+            haJugadoIa = true
         }
     }
     
@@ -279,6 +290,8 @@ function setListenersCasillasIa(){
             const jota = j
             handlerJcIa = function(){
                 clickListenerJcj(jota);
+                if(!haJugadoIa)
+                    setTimeout(handlerJcIa, 1); // para que se ejecute la funcion de nuevo y entre medias se actualice el tablero 
             }
             filasHtml[i][j].addEventListener("click",handlerJcIa);   
         }
@@ -315,7 +328,7 @@ function listenerJugador(pos){
 
 
 function juegaIa(){
-    var PROFUNDIDAD = 7
+    var PROFUNDIDAD = 8
     var ALPHA = -1000000000
     var BETA = 1000000000
     var divJugador = document.getElementsByName("turno")[0]
