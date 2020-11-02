@@ -91,14 +91,14 @@ function get_diagonales(){
     var diagonales = []
     for (var i = 0;i<ALTURA_MAXIMA; i++){
         var diagonal_arriba = [];//[filas[j + i][j] for j in range(ALTURA_MAXIMA) if i + j < ALTURA_MAXIMA]
-        for (var  j = 0; j<ALTURA_MAXIMA; j++){
+        for (var  j = 0; j<7; j++){
             if (i + j < ALTURA_MAXIMA)
                 diagonal_arriba.push(filas[j + i][j])
         }
 
         var diagonal_abajo = []//filas[j][j + i] for j in range(ALTURA_MAXIMA) if i + j < len(tablero)
         for (var  j = 0; j<ALTURA_MAXIMA; j++){
-            if (i + j < ALTURA_MAXIMA)
+            if (i + j < 7)
                 diagonal_abajo.push(filas[j][j + i]);
         }
         if (i != 0 && (diagonal_abajo).length > 3) // para que no se duplique la primera diagonal
@@ -108,21 +108,21 @@ function get_diagonales(){
 
         // diagonales hacia la izquierda
     for (var i = 0 ; i< ALTURA_MAXIMA; i++){
-        var diagonal_arriba = [] //filas[j][-j - 1 - i] for j in range(ALTURA_MAXIMA) if -j - 1 - i >= -7
+        var diagonal_arribaIz = [] //filas[j][-j - 1 - i] for j in range(ALTURA_MAXIMA) if -j - 1 - i >= -7
         for (var  j = 0; j<ALTURA_MAXIMA; j++){
             if (-j - 1 - i >= -7)
-                diagonal_arriba.push(filas[j][ 7 -j - 1 - i]);
+                diagonal_arribaIz.push(filas[j][ 7 -j - 1 - i]);
         }
 
-        var diagonal_abajo = [] //filas[j + i][-j - 1] for j in range(ALTURA_MAXIMA) if j + i < ALTURA_MAXIMA
-        for (var  j = 0; j<ALTURA_MAXIMA; j++){
+        var diagonal_abajoIz = [] //filas[j + i][-j - 1] for j in range(ALTURA_MAXIMA) if j + i < ALTURA_MAXIMA
+        for (var  j = 0; j<7; j++){
             if (j + i < ALTURA_MAXIMA)
-                diagonal_abajo.push(filas[j + i][ 7 -j - 1]);
+                diagonal_abajoIz.push(filas[j + i][ 7 -j - 1]);
         }
 
-        diagonales.push(diagonal_abajo)
-        if (i != 0 && (diagonal_arriba).length > 3)  // para que no se duplique la primera diagonal
-            diagonales.push(diagonal_arriba)
+        diagonales.push(diagonal_abajoIz)
+        if (i != 0 && (diagonal_arribaIz).length > 3)  // para que no se duplique la primera diagonal
+            diagonales.push(diagonal_arribaIz)
     }
     return diagonales
 }
@@ -155,11 +155,11 @@ function imprimir_tablero(){
 
 
 function minimax_alpha_beta(profundidad, alpha, beta, jugador){
-    /*ganador = hay_ganador()
+    ganador = hay_ganador()
     if (ganador == 'X')
          return {heu : -1000000, pos :-1}
     if (ganador == 'O')
-         return  {heu : 1000000, pos :-1}*/
+         return  {heu : 1000000, pos :-1}
     if( profundidad == 0)
         return {heu : heuristico(), pos :-1}
     if (jugador == 'O'){
@@ -290,7 +290,7 @@ function setListenersCasillasIa(){
             const jota = j
             handlerJcIa = function(){
                 clickListenerJcj(jota);
-                if(!haJugadoIa)
+                if(!haJugadoIa && inGame)
                     setTimeout(handlerJcIa, 1); // para que se ejecute la funcion de nuevo y entre medias se actualice el tablero 
             }
             filasHtml[i][j].addEventListener("click",handlerJcIa);   

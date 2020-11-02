@@ -67,7 +67,7 @@ def get_diagonales():
     # daigonales hacia la derecha
     diagonales = []
     for i in range(ALTURA_MAXIMA):
-        diagonal_arriba = [filas[j + i][j] for j in range(ALTURA_MAXIMA) if i + j < ALTURA_MAXIMA]
+        diagonal_arriba = [filas[j + i][j] for j in range(7) if i + j < ALTURA_MAXIMA]
         diagonal_abajo = [filas[j][j + i] for j in range(ALTURA_MAXIMA) if i + j < len(tablero)]
         if i != 0 and len(diagonal_abajo) > 3:
             diagonales.append(diagonal_abajo)
@@ -76,7 +76,7 @@ def get_diagonales():
         # diagonales hacia la izquierda
     for i in range(ALTURA_MAXIMA):
         diagonal_arriba = [filas[j][-j - 1 - i] for j in range(ALTURA_MAXIMA) if -j - 1 - i >= -7]
-        diagonal_abajo = [filas[j + i][-j - 1] for j in range(ALTURA_MAXIMA) if j + i < ALTURA_MAXIMA]
+        diagonal_abajo = [filas[j + i][-j - 1] for j in range(7) if j + i < ALTURA_MAXIMA]
         diagonales.append(diagonal_abajo)
         if i != 0 and len(diagonal_arriba) > 3:  # para que no se duplique la primera diagonal
             diagonales.append(diagonal_arriba)
