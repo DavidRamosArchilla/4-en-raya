@@ -155,11 +155,11 @@ function imprimir_tablero(){
 
 
 function minimax_alpha_beta(profundidad, alpha, beta, jugador){
-    ganador = hay_ganador()
+    /*ganador = hay_ganador()
     if (ganador == 'X')
          return {heu : -1000000, pos :-1}
     if (ganador == 'O')
-         return  {heu : 1000000, pos :-1}
+         return  {heu : 1000000, pos :-1}*/
     if( profundidad == 0)
         return {heu : heuristico(), pos :-1}
     if (jugador == 'O'){
