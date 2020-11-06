@@ -104,11 +104,11 @@ There are many variations of passages of Lorem Ipsum available, but the majority
            $(document).ready(function(){
                 $.getJSON('https://api.github.com/repos/Davidram1802/4-en-raya',function(data){
                     console.log(data.stargazers_count)
+                    alert('Este repositorio tiene ' + data.stargazers_count + ' estrella/s')
                     var aux = document.getElementsByClassName('textoFooter')[0].innerHTML
                     aux += ' (' + data.stargazers_count + ' estrella/s).'
                     document.getElementsByClassName('textoFooter')[0].innerHTML = aux
                 })
-
            });
         </script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js" integrity="sha384-wHAiFfRlMFy6i5SRaxvfOCifBUQy1xHdJ/yoi7FRNXMRBu5WHdZYu1hA6ZOblgut" crossorigin="anonymous"></script>

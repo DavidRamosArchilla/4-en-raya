@@ -369,8 +369,6 @@ function setListenersCasillasJcj(){
 }
 
 
-
-
 function dibujarTablero(){
     var filas = get_filas();
     var filasHtml =[];
