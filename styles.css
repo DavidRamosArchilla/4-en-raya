@@ -28,3 +28,22 @@ body{
  .turno{
     margin-bottom: 15px;
  }
+
+ .scrollTop{
+    position: fixed;
+    bottom: 800px;
+    right: 40px;
+    width: 60px;
+    height: 60px;
+    background: gray url(https://www.flaticon.com/svg/static/icons/svg/481/481155.svg);
+    border-radius: 50%;
+    visibility: hidden;
+    opacity: 0;
+    transition-duration: 0.5s;
+ }
+ .scrollTop.active{
+    visibility: visible;
+    opacity: 1;
+    bottom: 40px;
+
+}
