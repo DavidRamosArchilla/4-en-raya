@@ -6,22 +6,28 @@
         <link rel = "stylesheet" type="text/css" href = "./styles.css">
         <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
     </head>
-    <body class = "">
+    <body class = "bg-secondary">
         <div class = "container bg-white">
-            
             <div class = "row justify-content-center"> 
-                <div class="col-lg-6 col-sm-10">
+                <div class="col-lg-6 col-sm-10  div-tabla">
                     <table class="tabla" name = "tabla">
                     </table>
                 </div>
             </div>
-            <div class = "row justify-content-center"> 
+            <div class = "row  botones"> 
                 <button type="button" class="btn btn-primary" name="botonIniciar" onclick="playGameIa()">empezar contra ia</button>
                 <button type="button" class="btn btn-primary" name="botonIniciar" onclick="playGameJcj()">empezar jcj</button>
             </div>
-            <div class = "row justify-content-center" name ="turno"> 
+            <div class = "row justify-content-center turno" name ="turno"> 
 
             </div>
+            <div class="row bg-dark text-white ">
+                <div class="col-12 p-3 text-center">
+                    <i>Repositorio <a href="https://github.com/Davidram1802/4-en-raya" target="_blank" class="text-white font-weight-bold">aqui</a></i>
+                </div>
+
+            </div>
+           </footer>
 
         </div>
         <script type="application/javascript" src = "scripts/4_en_raya.js"></script>

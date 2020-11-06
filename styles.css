@@ -1,9 +1,30 @@
 td{
-
     background-color: dodgerblue;
 }
 table{
     border-collapse: collapse;
+}
 
+.botones{
+    display: flex;
+    justify-content: center;    
+    padding:0 25px 0 25;
+    margin: 15px auto;
+}
+
+.btn-primary{
+    margin: 0 20px;
 
 }
+
+.div-tabla{
+    margin-top: 50px;
+}
+
+body{
+    background-color: gray;
+}
+
+ .turno{
+    margin-bottom: 15px;
+ }
