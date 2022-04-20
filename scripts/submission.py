@@ -1,7 +1,137 @@
+from abc import abstractmethod
+import functools
 import numpy as np
-from IGame import IGame
-from connectx import Connectx
 import time
+
+class IGame:
+
+    @abstractmethod
+    def is_game_over(board, inarow):
+        pass
+
+    @abstractmethod
+    def change_turn(player):
+        pass
+
+    @abstractmethod
+    def get_open_cols(board):
+        pass
+
+    @abstractmethod
+    def make_move(board, col, player):
+        pass
+
+    @abstractmethod
+    def get_turn(board):
+        pass
+
+    @abstractmethod
+    def print_board(board):
+        pass
+
+class Connectx(IGame):
+    def __init__(self, inarow, rows, cols):
+        self.cols = cols
+        self.rows = rows
+        self.inarow = inarow
+        
+
+    def change_turn(self, player): 
+        if player == '1':
+            return '2'
+        else:
+            return '1'
+
+
+    def get_open_cols(self, board):
+        # board is serialized
+        # this order is better because the ia will start the search from the most centered columns
+        return [i for i in [3,4,2,5,1,6,0] if board[i] == '0']
+
+    def make_move(self, board, col, player):
+
+        entire_col = [board[i*self.cols + col] for i in range(self.rows)]
+        for i, cell in enumerate(reversed(entire_col)):
+            if cell == '0':
+                board = board[:(self.rows-i-1)*self.cols + col] + player + board[(self.rows-i-1)*self.cols+col+1:]
+                break
+        return board
+
+    def get_turn(self, board):
+        # assuming that '1' always starts playing
+        ones = board.count('1')
+        twos = board.count('2')
+        return '1' if ones == twos else '2'
+
+    def is_game_over(self, board, inarow):
+        '''
+        return the winner or '0' if there is no winner
+        '''
+        board2d = self.deserialize_board(board)
+        
+        # rows
+        for i in range(self.rows):
+            previous = ''
+            count = 1
+            for j in range(self.cols):
+                current = board[i*self.cols + j]
+                if previous != '0' and previous == current:
+                    count += 1
+                else:
+                    count = 1
+                if count == inarow:
+                    return current
+                previous = current
+        
+        # columns
+        for i in range(self.cols):
+            previous = ''
+            count = 1
+            for j in range(self.rows):
+                current = board[j*self.cols + i]
+                if previous != '0' and previous == current:
+                    count += 1
+                else:
+                    count = 1
+                if count == inarow:
+                    return current
+                previous = current
+        
+        # positive diagonal
+        for row in range(self.rows-(inarow-1)):
+            for col in range(self.cols-(inarow-1)):
+                window = list(board2d[range(row, row+inarow), range(col, col+inarow)])
+                
+                if window.count('1') == inarow:
+                    return '1'
+                elif window.count('2') == inarow:
+                    return '2'
+
+        # negative diagonal
+        for row in range(inarow-1, self.rows):
+            for col in range(self.cols-(inarow-1)):
+                window = list(board2d[range(row, row-inarow, -1), range(col, col+inarow)])
+                if window.count('1') == inarow:
+                    return '1'
+                elif window.count('2') == inarow:
+                    return '2'
+        return '0' if board.count('0') != 0 else 'draw'
+
+    def print_board(self, board):
+        for i in range(self.rows):
+            print('|', end='')
+            for j in range(self.cols):
+                print(board[i*self.cols + j], end='|')
+            print()
+        print(board)
+
+    def serialize_board(self, board):
+        return ''.join([str(cell) for row in board for cell in row])
+
+    def deserialize_board(self, board: str):
+        arr = np.array(list(board))
+        arr = arr.reshape((self.rows, self.cols))
+        return arr
 
 class MCTS:
      # hiperparameter to manage expliotation vs exploration
@@ -10,7 +140,7 @@ class MCTS:
         self.explored = set() # fen: value // eliminar??
         self.nodes_parameters = {} # fen: (N, V) N--> times visited, V-->value
         # self.UCT = {} # fen: UPC (upper confidence tree)
-        self.C = 1.41 # aprox sqrt(2)
+        self.C = 1.4 # aprox sqrt(2)
         self.game = game
 
     def get_value(self, result: str, player):
@@ -119,23 +249,14 @@ class MCTS:
             # self.game.print_board(c_aux)
         return best_move
 
-
-game = Connectx(4, 6, 7)
-mcts = MCTS(game)
-
-# c = '000000000000000102000022100001120002111200' # juega 2 buen movimiento
-# c = '000000000000000122000022100021120002111201' # juega 1 para evitar perder
-# c = '000000000000000122000122100021120002111201' # juega 2 para ganar
-# c = '000000000000000000000000000000000000000000'
-c = '000200000120000222010011102001210202121121'
-t = mcts.game.get_turn(c)
-game.print_board(c)
-print(mcts.best_move(c, t, n_iters=150))
-# mcts.iterate(150, c)
-print(mcts.nodes_parameters[c])
-for a in mcts.game.get_open_cols(c):
-    c_aux = mcts.game.make_move(c, a, t)
-    print(f'N: {mcts.nodes_parameters[c_aux][0]} , V: {mcts.nodes_parameters[c_aux][1]}')
-    mcts.game.print_board(c_aux)
-print(len(mcts.nodes_parameters), len(mcts.explored))
-mcts.game.print_board(c)
+def my_agent(observation, configuration):
+    board = functools.reduce(lambda x, y: str(x) + str(y), observation.board)
+    game = Connectx(configuration.inarow, configuration.rows, configuration.columns)
+    mcts = MCTS(game)
+    turn = game.get_turn(board)
+#     print(turn, configuration.rows, configuration.columns)
+#     print(board)
+    game.print_board(board)
+    move = mcts.best_move(board, turn, time_limit=7.1)
+#     print(move)
+    return move
