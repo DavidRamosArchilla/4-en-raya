@@ -45,7 +45,7 @@ class Connectx(IGame):
 
     def get_open_cols(self, board):
         # board is serialized
-        return [i for i in range(self.cols) if board[i] == '0']
+        return [i for i in [3, 4, 2, 5, 1, 6, 0] if board[i] == '0']
 
     def make_move(self, board, col, player):
 
@@ -245,8 +245,8 @@ class MCTS:
         best_move = 3 # por ejemplo 3
         for a in self.game.get_open_cols(board):
             c_aux = self.game.make_move(board, a, turn)
-            if self.game.is_game_over(c_aux, self.game.inarow) != '0':
-                return a
+            # if self.game.is_game_over(c_aux, self.game.inarow) != '0':
+            #     return a
             current_n = self.nodes_parameters[c_aux][0]
             if current_n > max_n:
                 max_n = current_n
@@ -264,6 +264,6 @@ def my_agent(observation, configuration):
 #     print(turn, configuration.rows, configuration.columns)
 #     print(board)
     # game.print_board(board)
-    move = mcts.best_move(board, turn, time_limit=7.1)
+    move = mcts.best_move(board, turn, time_limit=6.1)
 #     print(move)
     return move

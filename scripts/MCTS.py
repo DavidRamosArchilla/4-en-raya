@@ -2,6 +2,7 @@ import numpy as np
 from IGame import IGame
 from connectx import Connectx
 import time
+import functools
 
 class MCTS:
      # hiperparameter to manage expliotation vs exploration
@@ -40,7 +41,6 @@ class MCTS:
         # choose which node is going to be expanded
             best_uct = float('-inf')
             best_child = None
-            turn = self.game.get_turn(s)
             # best_w = 0
             n_p = self.nodes_parameters[s][0] # parent's n
             for a in childs:
@@ -63,7 +63,6 @@ class MCTS:
             self.explored.add(s)
             sum_v = 0
             sum_n = 0
-            turn = self.game.get_turn(s)
             for a in childs:
                 s_child = self.game.make_move(s, a, current_turn)
                 if s_child not in self.nodes_parameters:
@@ -112,8 +111,9 @@ class MCTS:
     def best_move(self, board, turn, n_iters=None, time_limit=None):
         self.iterate(board, n_iters=n_iters, time_limit=time_limit)
         max_n = 0
-        best_move = 3 # por ejemplo 3
-        for a in self.game.get_open_cols(board):
+        moves = self.game.get_open_cols(board)
+        best_move = moves[0] # por ejemplo 3
+        for a in moves:
             c_aux = self.game.make_move(board, a, turn)
             # if self.game.is_game_over(c_aux, self.game.inarow) != '0':
             #     return a
@@ -132,15 +132,17 @@ mcts = MCTS(game)
 # c = '000000000000000102000022100001120002111200' # juega 2 buen movimiento
 # c = '000000000000000122000022100021120002111201' # juega 1 para evitar perder
 # c = '000000000000000122000122100021120002111201' # juega 2 para ganar
-c = '000000000010000002200000210011012001221200' # juega 1 para ganar
+# c = '000000000010000002200000210011012001221200' # juega 1 para ganar
 # c = '000000000011000002200000210011012001221200' # 2 para ganar
 # c = '000000000000000000000000000000000000000000'
-# c = '000000001001011201102220220212021021102101'
-print('adjbasj', game.is_game_over('000000000020000122000122100021120002111201', 4))
+# c = '000000000000000100020020211002022101201211'
+board = [0, 0, 0, 2, 0, 0, 0, 0, 0, 2, 1, 2, 1, 0, 0, 0, 1, 1, 2, 1, 2, 0, 2, 2, 2, 1, 2, 1, 0, 1, 1, 2, 1, 2, 1, 1, 1, 2, 2, 1, 2, 1]
+c = functools.reduce(lambda x, y: str(x) + str(y), board)
 t = mcts.game.get_turn(c)
 print(t)
+print(game.is_game_over('000000000000000100020020211002022101201211', 4))
 game.print_board(c)
-print(mcts.best_move(c, t, time_limit=7.1))
+print(mcts.best_move(c, t, time_limit=7))
 # mcts.iterate(150, c)
 print(mcts.nodes_parameters[c])
 for a in mcts.game.get_open_cols(c):
