@@ -23,16 +23,16 @@ class MCTS:
             return 0
 
     def search(self, s, original_turn, current_turn):
-        # result = self.game.is_game_over(s, self.game.inarow)
-        # if result != '0':
-        #     v = self.get_value(result, original_turn) 
-        #     n = 1
-        #     if s not in self.nodes_parameters:
-        #         self.nodes_parameters[s] = np.array((1, v))
-        #     else:
-        #         self.nodes_parameters[s][0] += 1
-        #         n = self.nodes_parameters[s][0]
-        #     return v, n
+        result = self.game.is_game_over(s, self.game.inarow)
+        if result != '0':
+            v = self.get_value(result, original_turn) 
+            n = 1
+            if s not in self.nodes_parameters:
+                self.nodes_parameters[s] = np.array((1, v))
+            else:
+                self.nodes_parameters[s][0] += 1
+                n = self.nodes_parameters[s][0]
+            return v, n
 
         childs = self.game.get_open_cols(s)
 
