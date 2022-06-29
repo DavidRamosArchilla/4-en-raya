@@ -17,8 +17,7 @@ class Connectx(IGame):
 
     def get_open_cols(self, board):
         # board is serialized
-        # this order is better because the ia will start the search from the most centered columns
-        return [i for i in [3,4,2,5,1,6,0] if board[i] == '0']
+        return [i for i in [3, 4, 2, 5, 1, 6, 0] if board[i] == '0']
 
     def make_move(self, board, col, player):
 
@@ -37,7 +36,7 @@ class Connectx(IGame):
 
     def is_game_over(self, board, inarow):
         '''
-        return the winner or '0' if there is no winner
+        return the winner or '0' if there is no winner yet
         '''
         board2d = self.deserialize_board(board)
         
@@ -74,18 +73,18 @@ class Connectx(IGame):
             for col in range(self.cols-(inarow-1)):
                 window = list(board2d[range(row, row+inarow), range(col, col+inarow)])
                 
-                if window.count('1') == inarow:
+                if window.count(1) == inarow:
                     return '1'
-                elif window.count('2') == inarow:
+                elif window.count(2) == inarow:
                     return '2'
 
         # negative diagonal
         for row in range(inarow-1, self.rows):
             for col in range(self.cols-(inarow-1)):
                 window = list(board2d[range(row, row-inarow, -1), range(col, col+inarow)])
-                if window.count('1') == inarow:
+                if window.count(1) == inarow:
                     return '1'
-                elif window.count('2') == inarow:
+                elif window.count(2) == inarow:
                     return '2'
         return '0' if board.count('0') != 0 else 'draw'
 
@@ -96,12 +95,12 @@ class Connectx(IGame):
                 print(board[i*self.cols + j], end='|')
             print()
         print(board)
-
+    
     def serialize_board(self, board):
         return ''.join([str(cell) for row in board for cell in row])
 
     def deserialize_board(self, board: str):
-        arr = np.array(list(board))
+        arr = np.array(list(board), dtype=np.int8)
         arr = arr.reshape((self.rows, self.cols))
         return arr
 

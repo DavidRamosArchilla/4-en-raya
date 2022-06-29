@@ -45,8 +45,7 @@ class Connectx(IGame):
 
     def get_open_cols(self, board):
         # board is serialized
-        # this order is better because the ia will start the search from the most centered columns
-        return [i for i in [3,4,2,5,1,6,0] if board[i] == '0']
+        return [i for i in range(self.cols) if board[i] == '0']
 
     def make_move(self, board, col, player):
 
@@ -65,7 +64,7 @@ class Connectx(IGame):
 
     def is_game_over(self, board, inarow):
         '''
-        return the winner or '0' if there is no winner
+        return the winner or '0' if there is no winner yet
         '''
         board2d = self.deserialize_board(board)
         
@@ -102,18 +101,18 @@ class Connectx(IGame):
             for col in range(self.cols-(inarow-1)):
                 window = list(board2d[range(row, row+inarow), range(col, col+inarow)])
                 
-                if window.count('1') == inarow:
+                if window.count(1) == inarow:
                     return '1'
-                elif window.count('2') == inarow:
+                elif window.count(2) == inarow:
                     return '2'
 
         # negative diagonal
         for row in range(inarow-1, self.rows):
             for col in range(self.cols-(inarow-1)):
                 window = list(board2d[range(row, row-inarow, -1), range(col, col+inarow)])
-                if window.count('1') == inarow:
+                if window.count(1) == inarow:
                     return '1'
-                elif window.count('2') == inarow:
+                elif window.count(2) == inarow:
                     return '2'
         return '0' if board.count('0') != 0 else 'draw'
 
@@ -124,14 +123,15 @@ class Connectx(IGame):
                 print(board[i*self.cols + j], end='|')
             print()
         print(board)
-
+    
     def serialize_board(self, board):
         return ''.join([str(cell) for row in board for cell in row])
 
     def deserialize_board(self, board: str):
-        arr = np.array(list(board))
+        arr = np.array(list(board), dtype=np.int8)
         arr = arr.reshape((self.rows, self.cols))
         return arr
+
 
 class MCTS:
      # hiperparameter to manage expliotation vs exploration
@@ -140,7 +140,7 @@ class MCTS:
         self.explored = set() # fen: value // eliminar??
         self.nodes_parameters = {} # fen: (N, V) N--> times visited, V-->value
         # self.UCT = {} # fen: UPC (upper confidence tree)
-        self.C = 1.4 # aprox sqrt(2)
+        self.C = 1.41 # aprox sqrt(2)
         self.game = game
 
     def get_value(self, result: str, player):
@@ -152,15 +152,17 @@ class MCTS:
         else:
             return 0
 
-    def search(self, s):
+    def search(self, s, original_turn, current_turn):
         result = self.game.is_game_over(s, self.game.inarow)
         if result != '0':
-            v = self.get_value(result, self.game.get_turn(s)) 
+            v = self.get_value(result, original_turn) 
+            n = 1
             if s not in self.nodes_parameters:
                 self.nodes_parameters[s] = np.array((1, v))
             else:
                 self.nodes_parameters[s][0] += 1
-            return -v, 1
+                n = self.nodes_parameters[s][0]
+            return v, n
 
         childs = self.game.get_open_cols(s)
 
@@ -172,14 +174,16 @@ class MCTS:
             # best_w = 0
             n_p = self.nodes_parameters[s][0] # parent's n
             for a in childs:
-                s_child = self.game.make_move(s, a, turn)
+                s_child = self.game.make_move(s, a, current_turn)
                 n, w = self.nodes_parameters[s_child]
+                if current_turn != original_turn:
+                    w = -w
                 child_uct = self.get_UCT(n, w, n_p)
                 if child_uct > best_uct:
                     best_uct = child_uct
                     best_child = a
-            s = self.game.make_move(s, best_child, self.game.get_turn(s))
-            sum_v, sum_n = self.search(s)
+            s = self.game.make_move(s, best_child, current_turn)
+            sum_v, sum_n = self.search(s, original_turn, self.game.change_turn(current_turn))
             # propagate the results
             self.nodes_parameters[s][0] += sum_n
             self.nodes_parameters[s][1] += sum_v
@@ -191,21 +195,22 @@ class MCTS:
             sum_n = 0
             turn = self.game.get_turn(s)
             for a in childs:
-                s_child = self.game.make_move(s, a, turn)
+                s_child = self.game.make_move(s, a, current_turn)
                 if s_child not in self.nodes_parameters:
-                    v = self.simulate(s_child, turn, turn)
-                    self.nodes_parameters[s_child] = np.array((1, v))
+                    v = self.simulate(s_child, original_turn)
+                    self.nodes_parameters[s_child] = np.array((1, v)) # v no se si debe estar cambiado de signo
                     sum_v += v
                     sum_n += 1
                 
             self.nodes_parameters[s][0] += sum_n
             self.nodes_parameters[s][1] += sum_v
 
-        return -sum_v, sum_n
+        return sum_v, sum_n
 
-    def simulate(self, s, color_playing, turn):
+    def simulate(self, s, color_playing):
         result = self.game.is_game_over(s, 4)
-        while result == '0': #TODO usar variable inarow
+        turn = self.game.get_turn(s)
+        while result == '0': # TODO usar variable inarow
             move = np.random.choice(self.game.get_open_cols(s))
             s = self.game.make_move(s, move, turn)
             result = self.game.is_game_over(s, 4)
@@ -219,15 +224,16 @@ class MCTS:
 
     def iterate(self, s, n_iters=None, time_limit=None):
         self.nodes_parameters[s] = np.array((1, 0))
+        turn = self.game.get_turn(s)
         if time_limit is not None:
             end_time = time.time() + time_limit
             while time.time() < end_time:
-                v, n = self.search(s)
+                v, n = self.search(s, turn, turn)
                 self.nodes_parameters[s][0] += n
                 self.nodes_parameters[s][1] += v
         else:
             for _ in range(n_iters):
-                v, n = self.search(s)
+                v, n = self.search(s,turn, turn)
                 self.nodes_parameters[s][0] += n
                 self.nodes_parameters[s][1] += v
                 # if i % 10 == 0:
@@ -248,15 +254,16 @@ class MCTS:
             # print(f'N: {self.nodes_parameters[c_aux][0]} , V: {self.nodes_parameters[c_aux][1]}')
             # self.game.print_board(c_aux)
         return best_move
+        
 
 def my_agent(observation, configuration):
     board = functools.reduce(lambda x, y: str(x) + str(y), observation.board)
     game = Connectx(configuration.inarow, configuration.rows, configuration.columns)
     mcts = MCTS(game)
-    turn = game.get_turn(board)
+    turn = str(observation.mark)
 #     print(turn, configuration.rows, configuration.columns)
 #     print(board)
-    game.print_board(board)
+    # game.print_board(board)
     move = mcts.best_move(board, turn, time_limit=7.1)
 #     print(move)
     return move
