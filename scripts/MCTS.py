@@ -40,7 +40,7 @@ class MCTS:
         if s in self.explored:
         # choose which node is going to be expanded
             best_uct = float('-inf')
-            best_child = None
+            best_child = childs[0]
             # best_w = 0
             n_p = self.nodes_parameters[s][0] # parent's n
             for a in childs:
@@ -52,7 +52,7 @@ class MCTS:
                 if child_uct > best_uct:
                     best_uct = child_uct
                     best_child = a
-            s = self.game.make_move(s, best_child, current_turn)
+            s = self.game.make_move(s, best_child, current_turn) # TODO: EN ESTA LLAMADA SE PRODUCEN ERRORES, best child es null
             sum_v, sum_n = self.search(s, original_turn, self.game.change_turn(current_turn))
             # propagate the results
             self.nodes_parameters[s][0] += sum_n
@@ -130,14 +130,14 @@ game = Connectx(4, 6, 7)
 mcts = MCTS(game)
 
 # c = '000000000000000102000022100001120002111200' # juega 2 buen movimiento
-# c = '000000000000000122000022100021120002111201' # juega 1 para evitar perder
+c = '000000000000000122000022100021120002111201' # juega 1 para evitar perder
 # c = '000000000000000122000122100021120002111201' # juega 2 para ganar
 # c = '000000000010000002200000210011012001221200' # juega 1 para ganar
 # c = '000000000011000002200000210011012001221200' # 2 para ganar
 # c = '000000000000000000000000000000000000000000'
 # c = '000000000000000100020020211002022101201211'
-board = [0, 0, 0, 2, 0, 0, 0, 0, 0, 2, 1, 2, 1, 0, 0, 0, 1, 1, 2, 1, 2, 0, 2, 2, 2, 1, 2, 1, 0, 1, 1, 2, 1, 2, 1, 1, 1, 2, 2, 1, 2, 1]
-c = functools.reduce(lambda x, y: str(x) + str(y), board)
+# board = [0, 0, 0, 2, 0, 0, 0, 0, 0, 2, 1, 2, 1, 0, 0, 0, 1, 1, 2, 1, 2, 0, 2, 2, 2, 1, 2, 1, 0, 1, 1, 2, 1, 2, 1, 1, 1, 2, 2, 1, 2, 1]
+# c = functools.reduce(lambda x, y: str(x) + str(y), board)
 t = mcts.game.get_turn(c)
 print(t)
 print(game.is_game_over('000000000000000100020020211002022101201211', 4))

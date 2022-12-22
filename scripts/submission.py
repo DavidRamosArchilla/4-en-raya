@@ -169,8 +169,7 @@ class MCTS:
         if s in self.explored:
         # choose which node is going to be expanded
             best_uct = float('-inf')
-            best_child = None
-            turn = self.game.get_turn(s)
+            best_child = childs[0]
             # best_w = 0
             n_p = self.nodes_parameters[s][0] # parent's n
             for a in childs:
@@ -193,7 +192,6 @@ class MCTS:
             self.explored.add(s)
             sum_v = 0
             sum_n = 0
-            turn = self.game.get_turn(s)
             for a in childs:
                 s_child = self.game.make_move(s, a, current_turn)
                 if s_child not in self.nodes_parameters:
@@ -242,8 +240,9 @@ class MCTS:
     def best_move(self, board, turn, n_iters=None, time_limit=None):
         self.iterate(board, n_iters=n_iters, time_limit=time_limit)
         max_n = 0
-        best_move = 3 # por ejemplo 3
-        for a in self.game.get_open_cols(board):
+        moves = self.game.get_open_cols(board)
+        best_move = moves[0] # por ejemplo 3
+        for a in moves:
             c_aux = self.game.make_move(board, a, turn)
             # if self.game.is_game_over(c_aux, self.game.inarow) != '0':
             #     return a
@@ -254,6 +253,7 @@ class MCTS:
             # print(f'N: {self.nodes_parameters[c_aux][0]} , V: {self.nodes_parameters[c_aux][1]}')
             # self.game.print_board(c_aux)
         return best_move
+
         
 
 def my_agent(observation, configuration):
@@ -264,6 +264,6 @@ def my_agent(observation, configuration):
 #     print(turn, configuration.rows, configuration.columns)
 #     print(board)
     # game.print_board(board)
-    move = mcts.best_move(board, turn, time_limit=6.1)
+    move = mcts.best_move(board, turn, n_iters=180)
 #     print(move)
     return move
