@@ -1,269 +1,236 @@
-from abc import abstractmethod
-import functools
 import numpy as np
+import random
 import time
 
-class IGame:
 
-    @abstractmethod
-    def is_game_over(board, inarow):
-        pass
+def monte_carlo_tree_search(board, iterations=50, time_limit=7):
+    # Initialize the root node of the search tree with the current game state
+    root = Node(board)
+    player = root.get_turn(board)
+    print(player)
+    iters = 0
+    # Iteratively expand and simulate games from the root node
+    end_time = time.time() + time_limit
+    while time.time() < end_time:
+        # Select the best child node of the root node according to the UCB1 algorithm
+        selected_node = root
+        while not selected_node.is_leaf():
+            selected_node = selected_node.select_best_child()
+        # selected_node = root.select_best_child()
 
-    @abstractmethod
-    def change_turn(player):
-        pass
+        # If the selected node is a leaf node (i.e., it has no children), expand it
+        selected_node.expand()
 
-    @abstractmethod
-    def get_open_cols(board):
-        pass
+        # Simulate a random game from the selected node
+        for cild in selected_node.children:
+            outcome = cild.simulate()
+            # Backpropagate the outcome of the simulation to the root node
+            cild.backpropagate(outcome, player)
+        iters += 1
 
-    @abstractmethod
-    def make_move(board, col, player):
-        pass
-
-    @abstractmethod
-    def get_turn(board):
-        pass
-
-    @abstractmethod
-    def print_board(board):
-        pass
-
-class Connectx(IGame):
-    def __init__(self, inarow, rows, cols):
-        self.cols = cols
-        self.rows = rows
-        self.inarow = inarow
-        
-
-    def change_turn(self, player): 
-        if player == '1':
-            return '2'
-        else:
-            return '1'
+    # Return the best child of the root node as the next move
+    for node in root.children:
+        print(f'Visits: {node.visits}, wins: {node.wins}, move: {node.move}')
+    best_move = root.best_move()
+    print(f'best_move: {best_move}')
+    print(f'total iteraciones: {iters}')
+    return best_move
 
 
-    def get_open_cols(self, board):
-        # board is serialized
-        return [i for i in [3, 4, 2, 5, 1, 6, 0] if board[i] == '0']
+class Node:
+    def __init__(self, board, move=None, parent=None):
+        self.board = board  # The current game state represented as a NumPy array
+        self.move = move  # The move that led to this game state (if any)
+        self.parent = parent  # The parent node in the search tree (if any)
+        self.children = []  # A list of child nodes
+        self.visits = 1  # The number of times this node has been visited in the search
+        self.wins = 0  # The number of wins resulting from simulations starting from this node
 
-    def make_move(self, board, col, player):
+    def is_leaf(self):
+        """Returns True if this node has no children, False otherwise."""
+        return len(self.children) == 0
 
-        entire_col = [board[i*self.cols + col] for i in range(self.rows)]
-        for i, cell in enumerate(reversed(entire_col)):
-            if cell == '0':
-                board = board[:(self.rows-i-1)*self.cols + col] + player + board[(self.rows-i-1)*self.cols+col+1:]
+    def select_best_child(self):
+        """Selects the child node with the highest UCB1 score."""
+        # Calculate the UCB1 score for each child node
+        ucb1_scores = [self.calculate_ucb1(child) for child in self.children]
+
+        # Select the child with the highest UCB1 score
+        return self.children[np.argmax(ucb1_scores)]
+
+    def calculate_ucb1(self, node):
+        """Calculates the UCB1 score for a given node."""
+        # Calculate the exploitation term (the average reward for this node)
+        exploitation = node.wins / node.visits
+
+        # Calculate the exploration term (a measure of the uncertainty of this node)
+        exploration = np.sqrt(2 * np.log(self.visits) / node.visits)
+
+        # Return the sum of the exploitation and exploration terms as the UCB1 score
+        return exploitation + exploration
+
+    def expand(self):
+        """Expands this node by adding one child node for each legal move."""
+        # Find all legal moves
+        legal_moves = self.find_legal_moves()
+        turn = self.get_turn(self.board)
+        # Add a child node for each legal move
+        for move in legal_moves:
+            # Apply the move to create a new game state
+            child_board = self.apply_move(self.board, move, turn)
+            # Create a new node for the child game state
+            child_node = Node(child_board, move=move, parent=self)
+            # Add the child node to the list of children
+            self.children.append(child_node)
+
+    def find_legal_moves(self):
+        """Finds all legal moves that can be made on the current game board."""
+        legal_moves = []  # Initialize an empty list of legal moves
+
+        # Iterate over each column in the game board
+        for col in range(self.board.shape[1]):
+            # If the top cell in the column is empty, it's a legal move
+            if self.board[0, col] == 0:
+                legal_moves.append(col)
+
+        return legal_moves
+
+    def apply_move(self, board, move, player):
+        """Applies a move to a game board and returns the resulting game board."""
+        # Make a copy of the game board so we don't modify the original
+        new_board = np.copy(board)
+
+        # Find the first empty cell in the column
+        # Iterate over rows in reverse order
+        for row in range(board.shape[0] - 1, -1, -1):
+            if new_board[row, move] == 0:
+                # Place the move in the empty cell
+                new_board[row, move] = player
                 break
-        return board
+
+        return new_board
 
     def get_turn(self, board):
         # assuming that '1' always starts playing
-        ones = board.count('1')
-        twos = board.count('2')
-        return '1' if ones == twos else '2'
+        player1 = np.count_nonzero(board == 1)
+        player2 = np.count_nonzero(board == -1)
+        return 1 if player1 == player2 else -1
 
-    def is_game_over(self, board, inarow):
-        '''
-        return the winner or '0' if there is no winner yet
-        '''
-        board2d = self.deserialize_board(board)
-        
-        # rows
-        for i in range(self.rows):
-            previous = ''
-            count = 1
-            for j in range(self.cols):
-                current = board[i*self.cols + j]
-                if previous != '0' and previous == current:
-                    count += 1
-                else:
-                    count = 1
-                if count == inarow:
-                    return current
-                previous = current
-        
-        # columns
-        for i in range(self.cols):
-            previous = ''
-            count = 1
-            for j in range(self.rows):
-                current = board[j*self.cols + i]
-                if previous != '0' and previous == current:
-                    count += 1
-                else:
-                    count = 1
-                if count == inarow:
-                    return current
-                previous = current
-        
-        # positive diagonal
-        for row in range(self.rows-(inarow-1)):
-            for col in range(self.cols-(inarow-1)):
-                window = list(board2d[range(row, row+inarow), range(col, col+inarow)])
-                
-                if window.count(1) == inarow:
-                    return '1'
-                elif window.count(2) == inarow:
-                    return '2'
+    def simulate(self):
+        """Simulates a random game starting from this node and returns the outcome."""
+        # Make a copy of the current game state so we don't modify the original
+        board = np.copy(self.board)
 
-        # negative diagonal
-        for row in range(inarow-1, self.rows):
-            for col in range(self.cols-(inarow-1)):
-                window = list(board2d[range(row, row-inarow, -1), range(col, col+inarow)])
-                if window.count(1) == inarow:
-                    return '1'
-                elif window.count(2) == inarow:
-                    return '2'
-        return '0' if board.count('0') != 0 else 'draw'
+        # Initialize the player to move (1 for the first player, -1 for the second player)
+        player = self.get_turn(board)
+        initial_player = player
 
-    def print_board(self, board):
-        for i in range(self.rows):
-            print('|', end='')
-            for j in range(self.cols):
-                print(board[i*self.cols + j], end='|')
-            print()
-        print(board)
-    
-    def serialize_board(self, board):
-        return ''.join([str(cell) for row in board for cell in row])
+        # Simulate the game until it's over
+        while True:
+            # Check if the game is over
+            result = self.game_over(board)
+            if result is not None:
+                # print(f'Resultado: {result}')
+                # imprimir_tablero(board)
+                return result  # Return the outcome of the game
 
-    def deserialize_board(self, board: str):
-        arr = np.array(list(board), dtype=np.int8)
-        arr = arr.reshape((self.rows, self.cols))
-        return arr
+            # Find all legal moves
+            legal_moves = self.find_legal_moves()
 
+            # If there are no legal moves, the game is a draw
+            if len(legal_moves) == 0:
+                # print('Resultado: empate')
+                # imprimir_tablero(board)
+                return 0
 
-class MCTS:
-     # hiperparameter to manage expliotation vs exploration
+            # Choose a random legal move
+            move = random.choice(legal_moves)
 
-    def __init__(self, game: IGame):
-        self.explored = set() # fen: value // eliminar??
-        self.nodes_parameters = {} # fen: (N, V) N--> times visited, V-->value
-        # self.UCT = {} # fen: UPC (upper confidence tree)
-        self.C = 1.41 # aprox sqrt(2)
-        self.game = game
+            # Apply the move to the game board
+            board = self.apply_move(board, move, player)
 
-    def get_value(self, result: str, player):
-        if result == '1':
-            return 1 if player == '1' else -1
+            # Switch players
+            player = -player
 
-        elif result == '2':
-            return -1 if player == '1' else 1 
-        else:
+    def backpropagate(self, outcome, player):
+        """Updates the number of visits and wins for this node and all of its ancestors based on the outcome of a simulation."""
+        # Update the number of visits for this node
+        self.visits += 1
+
+        # If the outcome is 1, increment the number of wins for this node
+        if outcome == player:
+            self.wins += 1
+        # elif outcome == -player:
+        #   self.wins -= 1 # DEBERIA SER ASI????
+
+        # If this node has a parent, backpropagate the outcome to the parent
+        if self.parent is not None:
+            self.parent.backpropagate(outcome, player)
+
+    def game_over(self, board):
+        cols = 7
+        rows = 6
+
+        # If the board is full, the game is a draw
+        if np.all(board != 0):
             return 0
 
-    def search(self, s, original_turn, current_turn):
-        result = self.game.is_game_over(s, self.game.inarow)
-        if result != '0':
-            v = self.get_value(result, original_turn) 
-            n = 1
-            if s not in self.nodes_parameters:
-                self.nodes_parameters[s] = np.array((1, v))
-            else:
-                self.nodes_parameters[s][0] += 1
-                n = self.nodes_parameters[s][0]
-            return v, n
+        def _get_window_value(window):
+            if window.count(1) == 4:
+                return 1
+            elif window.count(-1) == 4:
+                return -1
+            return None
 
-        childs = self.game.get_open_cols(s)
+        # rows
+        for row in board:
+            for i in range(cols-4+1):
+                window = list(row[i:i+4])
+                value = _get_window_value(window)
+                if value is not None:
+                    return value
 
-        if s in self.explored:
-        # choose which node is going to be expanded
-            best_uct = float('-inf')
-            best_child = childs[0]
-            # best_w = 0
-            n_p = self.nodes_parameters[s][0] # parent's n
-            for a in childs:
-                s_child = self.game.make_move(s, a, current_turn)
-                n, w = self.nodes_parameters[s_child]
-                if current_turn != original_turn:
-                    w = -w
-                child_uct = self.get_UCT(n, w, n_p)
-                if child_uct > best_uct:
-                    best_uct = child_uct
-                    best_child = a
-            s = self.game.make_move(s, best_child, current_turn)
-            sum_v, sum_n = self.search(s, original_turn, self.game.change_turn(current_turn))
-            # propagate the results
-            self.nodes_parameters[s][0] += sum_n
-            self.nodes_parameters[s][1] += sum_v
+        # columns
+        for i in range(cols):
+            col = board[:, i]
+            for j in range(rows-4+1):
+                window = list(col[j:j+4])
+                value = _get_window_value(window)
+                if value is not None:
+                    return value
 
-        
-        else:
-            self.explored.add(s)
-            sum_v = 0
-            sum_n = 0
-            for a in childs:
-                s_child = self.game.make_move(s, a, current_turn)
-                if s_child not in self.nodes_parameters:
-                    v = self.simulate(s_child, original_turn)
-                    self.nodes_parameters[s_child] = np.array((1, v)) # v no se si debe estar cambiado de signo
-                    sum_v += v
-                    sum_n += 1
-                
-            self.nodes_parameters[s][0] += sum_n
-            self.nodes_parameters[s][1] += sum_v
+        # positive diagonal
+        for row in range(rows-(4-1)):
+            for col in range(cols-(4-1)):
+                window = list(board[range(row, row+4), range(col, col+4)])
+                value = _get_window_value(window)
+                if value is not None:
+                    return value
 
-        return sum_v, sum_n
+        # negative diagonal
+        for row in range(4-1, rows):
+            for col in range(cols-(4-1)):
+                window = list(board[range(row, row-4, -1), range(col, col+4)])
+                value = _get_window_value(window)
+                if value is not None:
+                    return value
 
-    def simulate(self, s, color_playing):
-        result = self.game.is_game_over(s, 4)
-        turn = self.game.get_turn(s)
-        while result == '0': # TODO usar variable inarow
-            move = np.random.choice(self.game.get_open_cols(s))
-            s = self.game.make_move(s, move, turn)
-            result = self.game.is_game_over(s, 4)
-            turn = self.game.change_turn(turn)
-        return self.get_value(result, color_playing)
+        # If it is not gae over yet
+        return None
 
-
-    def get_UCT(self, n, w, n_p):
-        # return w/n + self.C * np.sqrt(n_p) / (1 + n)
-        return w/n + self.C * np.sqrt(np.log(n_p) / n)
-
-    def iterate(self, s, n_iters=None, time_limit=None):
-        self.nodes_parameters[s] = np.array((1, 0))
-        turn = self.game.get_turn(s)
-        if time_limit is not None:
-            end_time = time.time() + time_limit
-            while time.time() < end_time:
-                v, n = self.search(s, turn, turn)
-                self.nodes_parameters[s][0] += n
-                self.nodes_parameters[s][1] += v
-        else:
-            for _ in range(n_iters):
-                v, n = self.search(s,turn, turn)
-                self.nodes_parameters[s][0] += n
-                self.nodes_parameters[s][1] += v
-                # if i % 10 == 0:
-                #     print(f'Iteration {i+1} [{"=" * (i//5)}>{" " * ((n_iters-i-1)//5)}]')
-
-    def best_move(self, board, turn, n_iters=None, time_limit=None):
-        self.iterate(board, n_iters=n_iters, time_limit=time_limit)
-        max_n = 0
-        moves = self.game.get_open_cols(board)
-        best_move = moves[0] # por ejemplo 3
-        for a in moves:
-            c_aux = self.game.make_move(board, a, turn)
-            # if self.game.is_game_over(c_aux, self.game.inarow) != '0':
-            #     return a
-            current_n = self.nodes_parameters[c_aux][0]
-            if current_n > max_n:
-                max_n = current_n
-                best_move = a
-            # print(f'N: {self.nodes_parameters[c_aux][0]} , V: {self.nodes_parameters[c_aux][1]}')
-            # self.game.print_board(c_aux)
+    def best_move(self):
+        best_move = None
+        max_visits = 0
+        for child in self.children:
+            current_n = child.visits
+            if current_n > max_visits:
+                max_visits = current_n
+                best_move = child.move
         return best_move
 
-        
 
 def my_agent(observation, configuration):
-    board = functools.reduce(lambda x, y: str(x) + str(y), observation.board)
-    game = Connectx(configuration.inarow, configuration.rows, configuration.columns)
-    mcts = MCTS(game)
-    turn = str(observation.mark)
-#     print(turn, configuration.rows, configuration.columns)
-#     print(board)
-    # game.print_board(board)
-    move = mcts.best_move(board, turn, n_iters=180)
-#     print(move)
+    board = np.array(observation.board, dtype=np.int32).reshape((6,7))
+    board = np.where(board == 2, -1, board)
+    move = monte_carlo_tree_search(board, time_limit=6.5)
     return move
