@@ -107,7 +107,8 @@ There are many variations of passages of Lorem Ipsum available, but the majority
                     var aux = document.getElementsByClassName('textoFooter')[0].innerHTML
                     aux += ' (' + data.stargazers_count + ' estrella/s).'
                     document.getElementsByClassName('textoFooter')[0].innerHTML = aux
-                    alert('Este repositorio tiene ' + data.stargazers_count + ' estrella/s')
+                    // alert('Este repositorio tiene ' + data.stargazers_count + ' estrella/s')
+                    console.log('Este repositorio tiene ' + data.stargazers_count + ' estrella/s');
                 })
            });
         </script>
